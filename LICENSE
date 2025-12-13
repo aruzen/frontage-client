@@ -1,0 +1,16 @@
+Copyright (c) 2025 ahaha-craft.org
+All Rights Reserved.
+
+Hannari Mincho:
+This software uses the font "Hannari Mincho".
+"Hannari Mincho" is a derivative work of "IPAex Mincho".
+
+IPAex Mincho:
+Copyright (c) Information-technology Promotion Agency, Japan (IPA)
+Distributed under the IPA Font License Agreement v1.0
+http://ipafont.ipa.go.jp/ipa_font_license_v1.html
+
+### Special thanks:
+- Boost いつもありがとうございます
+- GLFW 時間があったらMacで起こるバグを認識しているので、issue/pull-req送ります
+- stb どのプラットフォームでも動くの本当に美しいと思います
