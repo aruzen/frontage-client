@@ -12,6 +12,11 @@ add_executable(frontage_client
         src/utils/bitmap_text.cpp
         src/obj/card.cpp
         src/obj/piece.cpp
+        src/resource/image.cpp
+        src/scene/lobby/title.cpp
+        src/drawer/texture.cpp
+        src/resource/mvp.cpp
+        src/obj/square.cpp
 )
 
 link_directories(lib)
