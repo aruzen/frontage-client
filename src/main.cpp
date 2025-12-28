@@ -41,7 +41,12 @@ int main() {
         using namespace aho::literals;
         namespace pl = vsl::pipeline_layout;
 #ifdef _MSC_VER
-    vsl::utils::ShaderCompiler shader_compiler("glslc", "shaders/");
+    vsl::utils::ShaderCompiler shader_compiler("glslc", {
+            "${AHO_HOME}/built-in-resource/shaders/",
+            "shaders/float/",
+            "shaders/int/",
+            "shaders/ubo/",
+            "shaders/ubo_pos/" });
 #elifdef __APPLE_CC__
     vsl::utils::ShaderCompiler shader_compiler("glslc", {
             "${AHO_HOME}/built-in-resource/shaders/",
@@ -80,9 +85,7 @@ int main() {
 
         ::Image::get_context(engine);
         ::MVPMatrix::get_context(engine);
-<<<<<<< Updated upstream
     get_texture_drawer_controller(engine, layout);
-=======
 #ifdef _MSC_VER
         vsl::utils::ShaderCompiler shader_compiler("glslc", {
                 "shaders/float/",
@@ -98,40 +101,13 @@ int main() {
 #endif
         shader_compiler.load();
         shader_compiler.compile();
-#ifdef _MSC_VER
-        auto s1 = make_shader<"shaders/const_triangle.vert.spv">(device);
-auto s2 = make_shader<"shaders/red.frag.spv">(device);
-pl::ShaderGroup red_triangle_shaders("red_triangle", { s1, s2 }),
-    colorfull_triangle_shaders("colorfull_triangle", { make_shader<"shaders/const_triangle2.vert.spv">(device), make_shader<"shaders/colorfull.frag.spv">(device) }),
-    input_sahders("2d_input", { make_shader<"shaders/input.vert.spv">(device), make_shader<"shaders/input.frag.spv">(device) });
-#elifdef __APPLE_CC__
-        pl::ShaderGroup input_d3_shaders("3d_color_input",
-                                         {make_shader<"${AHO_HOME}/built-in-resource/shaders/vd2p_fc_umpv.vert.spv">(
-                                                 device),
-                                          make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(
-                                                  device)}),
-                input_d2_shaders("2d_color_input",
-                                 {make_shader<"${AHO_HOME}/built-in-resource/shaders/vd2p_fc.vert.spv">(device),
-                                  make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(device)}),
-                push_d2_shaders("2d_color_push",
-                                {make_shader<"${AHO_HOME}/built-in-resource/shaders/2dtriangle_single_color.vert.spv">(
-                                        device),
-                                 make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(device)});
-#endif
->>>>>>> Stashed changes
 
     main_window.add_plugin<window::WindowResizeHookPlugin>([&gctx, &swapchain](auto w) {
         gctx.viewport = Viewport(swapchain);
         gctx.scissor = Scissor(swapchain);
     });
 
-    main_window.add_plugin<window::WindowResizeHookPlugin>([&mvp, &swapchain](auto w) {
-        auto size = w->frame_size();
-        mvp.set_proj(matrix::make_perspective(45.0_deg,
-                                              (float) size.value.x.value / size.value.y.value,
-                                              0.1f,
-                                              10.0f));
-    });
+    
 
 
         MVPMatrix mvp({
@@ -141,12 +117,18 @@ pl::ShaderGroup red_triangle_shaders("red_triangle", { s1, s2 }),
                                                         Point(0.0f, 0.0f, 0.0f),
                                                         Vector(0.0f, 0.0f, 1.0f)),
                               .proj = matrix::make_perspective(45.0_deg,
-                                                               viewport.width / (float) viewport.height,
+                                                               gctx.viewport.width / (float)gctx.viewport.height,
                                                                0.1f,
                                                                10.0f)
                       });
 
-
+        main_window.add_plugin<window::WindowResizeHookPlugin>([&mvp, &swapchain](auto w) {
+            auto size = w->frame_size();
+            mvp.set_proj(matrix::make_perspective(45.0_deg,
+                (float)size.value.x.value / size.value.y.value,
+                0.1f,
+                10.0f));
+            });
 
         ::Image logo("ahaha_logo", "${AHO_HOME}/built-in-resource/images/ahahacraft.png");
 
