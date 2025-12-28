@@ -16,6 +16,11 @@
 
 struct TextureDrawerContext {
     aho::engine::StandardEngine engine;
+    vsl::PipelineLayout float_push_texture_layout;
+    vsl::PipelineAccessor float_push_texture;
+
+    vsl::PipelineLayout int_push_texture_layout;
+    vsl::PipelineAccessor int_push_texture;
 };
 
 extern TextureDrawerContext &get_texture_drawer_controller(std::optional<aho::engine::StandardEngine> engine = std::nullopt,

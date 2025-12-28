@@ -13,10 +13,13 @@ add_executable(frontage_client
         src/obj/card.cpp
         src/obj/piece.cpp
         src/resource/image.cpp
-        src/scene/lobby/title.cpp
+        src/scene/lobby/lobby.cpp
         src/drawer/texture.cpp
         src/resource/mvp.cpp
         src/obj/square.cpp
+        src/global.cpp
+        src/scene/scene.hpp
+        src/resource/standard_buffers.cpp
 )
 
 link_directories(lib)

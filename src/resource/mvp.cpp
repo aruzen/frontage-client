@@ -27,7 +27,6 @@ MVPMatrix::Context MVPMatrix::make_context(std::optional<aho::StandardEngine> e)
 
 MVPMatrix::Context &MVPMatrix::get_context(std::optional<aho::StandardEngine> engine) {
     static MVPMatrix::Context context = make_context(engine);
-    vsl::loggingln((bool)context.mvp_pool._data);
     return context;
 }
 
