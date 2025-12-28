@@ -14,10 +14,12 @@
 /*
 * https://vulkan-tutorial.com/en/Vertex_buffers/Staging_buffer
 */
-
-#include <boost/bimap.hpp>
-#include <stb_image.h>
-#include <stb_image_write.h>
+#define STB_IMAGE_IMPLEMENTATION 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+// #include <boost/bimap.hpp>
+// #include "../thirdparty/json.hpp"
+#include "../thirdparty/stb_image.h"
+#include "../thirdparty/stb_image_write.h"
 #include "utils/bitmap_text.hpp"
 #include "utils/pipeline_helper.hpp"
 
@@ -78,7 +80,45 @@ int main() {
 
         ::Image::get_context(engine);
         ::MVPMatrix::get_context(engine);
+<<<<<<< Updated upstream
     get_texture_drawer_controller(engine, layout);
+=======
+#ifdef _MSC_VER
+        vsl::utils::ShaderCompiler shader_compiler("glslc", {
+                "shaders/float/",
+                "shaders/int/",
+                "shaders/ubo/",
+                "shaders/ubo_pos/" });
+#elifdef __APPLE_CC__
+        vsl::utils::ShaderCompiler shader_compiler("glslc", {
+                "../shaders/float/",
+                "../shaders/int/",
+                "../shaders/ubo/",
+                "../shaders/ubo_pos/"});
+#endif
+        shader_compiler.load();
+        shader_compiler.compile();
+#ifdef _MSC_VER
+        auto s1 = make_shader<"shaders/const_triangle.vert.spv">(device);
+auto s2 = make_shader<"shaders/red.frag.spv">(device);
+pl::ShaderGroup red_triangle_shaders("red_triangle", { s1, s2 }),
+    colorfull_triangle_shaders("colorfull_triangle", { make_shader<"shaders/const_triangle2.vert.spv">(device), make_shader<"shaders/colorfull.frag.spv">(device) }),
+    input_sahders("2d_input", { make_shader<"shaders/input.vert.spv">(device), make_shader<"shaders/input.frag.spv">(device) });
+#elifdef __APPLE_CC__
+        pl::ShaderGroup input_d3_shaders("3d_color_input",
+                                         {make_shader<"${AHO_HOME}/built-in-resource/shaders/vd2p_fc_umpv.vert.spv">(
+                                                 device),
+                                          make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(
+                                                  device)}),
+                input_d2_shaders("2d_color_input",
+                                 {make_shader<"${AHO_HOME}/built-in-resource/shaders/vd2p_fc.vert.spv">(device),
+                                  make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(device)}),
+                push_d2_shaders("2d_color_push",
+                                {make_shader<"${AHO_HOME}/built-in-resource/shaders/2dtriangle_single_color.vert.spv">(
+                                        device),
+                                 make_shader<"${AHO_HOME}/built-in-resource/shaders/fc.frag.spv">(device)});
+#endif
+>>>>>>> Stashed changes
 
     main_window.add_plugin<window::WindowResizeHookPlugin>([&gctx, &swapchain](auto w) {
         gctx.viewport = Viewport(swapchain);

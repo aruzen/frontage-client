@@ -9,12 +9,14 @@ std::map<std::string, CardResource> Card::resource_repo;
 
 bool Card::register_resource(std::string name, std::string illust_file_path, std::string description) {
 
+    return true;
 }
 
 bool Card::init_numbers_repo() {
     for (int i = 0; i <= 30; i++) {
         numbers_repo;
     }
+    return true;
 }
 
 void Card::draw(aho::DrawPhase &p) {
