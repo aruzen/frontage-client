@@ -17,13 +17,15 @@ make_normal_texcoord(std::optional<aho::StandardEngine> e) {
     return {d->logical_device, d->command_manager, texcoords};
 }
 
-static vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
-bufs::normal_texcoord(std::optional<aho::StandardEngine> e) {
-    static auto buf = make_normal_texcoord(e);
-    return buf;
+vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
+bufs::normal_texcoord(std::optional<aho::StandardEngine> e, bool clean) {
+    static std::optional buf = make_normal_texcoord(e);
+    if (clean)
+        buf.reset();
+    return *buf;
 }
 
-vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
+vsl::DeviceLocalBuffer<vsl::MemoryType::IndexBuffer>
 make_rect_indexes(std::optional<aho::StandardEngine> e) {
     using namespace aho;
     auto d = e->_data;
@@ -33,8 +35,10 @@ make_rect_indexes(std::optional<aho::StandardEngine> e) {
     return {d->logical_device, d->command_manager, indexes};
 }
 
-static vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
-bufs::rect_indexes(std::optional<aho::StandardEngine> e) {
-    static auto buf = make_rect_indexes(e);
-    return buf;
+vsl::DeviceLocalBuffer<vsl::MemoryType::IndexBuffer>
+bufs::rect_indexes(std::optional<aho::StandardEngine> e, bool clean) {
+    static std::optional buf = make_rect_indexes(e);
+    if (clean)
+        buf.reset();
+    return *buf;
 }

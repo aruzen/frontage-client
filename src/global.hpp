@@ -10,6 +10,7 @@
 struct GlobalContext {
     vsl::Viewport viewport;
     vsl::Scissor scissor;
+    vsl::PipelineLayout base_layout;
 };
 
 

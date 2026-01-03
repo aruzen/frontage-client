@@ -8,15 +8,15 @@
 
 namespace gfx = vsl::graphic_resource;
 
-MVPMatrix::Context MVPMatrix::make_context(std::optional<aho::StandardEngine> e) {
+VPMatrix::Context VPMatrix::make_context(std::optional<aho::StandardEngine> e) {
     if (not e.has_value())
-        throw std::runtime_error("error: You must init MVPMatrix::make_context.");
+        throw std::runtime_error("error: You must init VPMatrix::make_context.");
     auto engine = e.value();
-    return MVPMatrix::Context{
+    return VPMatrix::Context{
             .engine = engine,
             .mvp_layout = gfx::BindingLayout(
                     engine._data->logical_device, {
-                            aho::pipeline::getBindingPoint(aho::pipeline::ResourceName::MVPMatrixUBO)
+                            aho::pipeline::getBindingPoint(aho::pipeline::ResourceName::VPMatrixUBO)
                     }),
             .mvp_pool = engine._data->graphic_resource_manager->make(
                     std::map<gfx::Type, size_t>{
@@ -25,22 +25,24 @@ MVPMatrix::Context MVPMatrix::make_context(std::optional<aho::StandardEngine> e)
     };
 }
 
-MVPMatrix::Context &MVPMatrix::get_context(std::optional<aho::StandardEngine> engine) {
-    static MVPMatrix::Context context = make_context(engine);
-    return context;
+VPMatrix::Context &VPMatrix::get_context(std::optional<aho::StandardEngine> engine, bool clean) {
+    static std::optional<VPMatrix::Context> context = make_context(engine);
+    if (clean)
+        context.reset();
+    return *context;
 }
 
-MVPMatrix::MVPMatrix(Data data) : _data(data) {
+VPMatrix::VPMatrix(Data data, std::uint32_t binding) : _data(data), binding(binding) {
     using namespace aho::pipeline;
 
     auto &context = get_context();
     auto &engine_data = *context.engine._data;
     auto size = context.engine.boot_window->_data2->swapchain.getSwapImageSize();
     for (size_t i = 0; i < size; i++) {
-        MVPMatrix::UboBuffer ubo(engine_data.logical_device, this->_data);
+        VPMatrix::UboBuffer ubo(engine_data.logical_device, this->_data);
         this->buffers.push_back(ubo);
     }
-    vsl::graphic_resource::BindingLayout l(engine_data.logical_device, {getBindingPoint(ResourceName::MVPMatrixUBO)});
+    vsl::graphic_resource::BindingLayout l(engine_data.logical_device, {getBindingPoint(ResourceName::VPMatrixUBO)});
     const auto& [ok, bind] = context.mvp_pool.bind(size, l);
     if (not ok)
         return;
@@ -52,57 +54,49 @@ MVPMatrix::MVPMatrix(Data data) : _data(data) {
     generations = std::vector<size_t>(resource.size(), 0);
 }
 
-MVPMatrix::MVPMatrix(aho::Mat4x4<float> model, aho::Mat4x4<float> view, aho::Mat4x4<float> proj)
-        : MVPMatrix::MVPMatrix(MVPMatrix::Data{
-        .model = model,
+VPMatrix::VPMatrix(aho::Mat4x4<float> view, aho::Mat4x4<float> proj, std::uint32_t binding)
+        : VPMatrix::VPMatrix(VPMatrix::Data{
         .view = view,
         .proj = proj,
-}) {}
+}, binding) {}
 
-void MVPMatrix::set_index(size_t index) {
+void VPMatrix::set_index(size_t index) {
     this->now_index = index;
 }
 
-MVPMatrix::Data MVPMatrix::data() {
+VPMatrix::Data VPMatrix::data() {
     return _data;
 }
 
-aho::Mat4x4F MVPMatrix::model() const {
-    return _data.model;
-}
-
-aho::Mat4x4F MVPMatrix::view() const {
+aho::Mat4x4F VPMatrix::view() const {
     return _data.view;
 }
 
-aho::Mat4x4F MVPMatrix::proj() const {
+aho::Mat4x4F VPMatrix::proj() const {
     return _data.proj;
 }
 
-void MVPMatrix::set(MVPMatrix::Data data) {
+void VPMatrix::set(VPMatrix::Data data) {
     _data = data;
     generation++;
 }
 
-void MVPMatrix::set_model(aho::Mat4x4<float> model) {
-    _data.model = model;
-    generation++;
-}
-
-void MVPMatrix::set_view(aho::Mat4x4<float> view) {
+void VPMatrix::set_view(aho::Mat4x4<float> view) {
     _data.view = view;
     generation++;
 }
 
-void MVPMatrix::set_proj(aho::Mat4x4<float> proj) {
+void VPMatrix::set_proj(aho::Mat4x4<float> proj) {
     _data.proj = proj;
     generation++;
 }
 
-void MVPMatrix::invoke(vsl::DefaultPhaseStream &pst, const vsl::CommandPool &pool, const vsl::CommandBuffer &buffer,
+void VPMatrix::invoke(vsl::DefaultPhaseStream &pst, const vsl::CommandPool &pool, const vsl::CommandBuffer &buffer,
                        const vsl::CommandManager &manager) {
     if (generations[this->now_index] < generation) {
         buffers[this->now_index].copy(_data);
     }
-    pst << vsl::command::BindGraphicResource(resource[this->now_index], gfx::BindingDestination::Graphics);
+    auto cmd = vsl::command::BindGraphicResource(resource[this->now_index], gfx::BindingDestination::Graphics);
+    cmd.first_binding = this->binding;
+    pst << cmd;
 }

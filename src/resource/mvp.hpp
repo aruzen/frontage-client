@@ -10,7 +10,7 @@
 #include <AHO/engine.hpp>
 #include <AHO/engine/standard_engine.hpp>
 
-struct MVPMatrix {
+struct VPMatrix {
     struct Context {
         aho::StandardEngine engine;
         vsl::graphic_resource::BindingLayout mvp_layout;
@@ -19,10 +19,9 @@ struct MVPMatrix {
 
     static Context make_context(std::optional<aho::StandardEngine> engine);
 
-    static Context &get_context(std::optional<aho::StandardEngine> engine = std::nullopt);
+    static Context &get_context(std::optional<aho::StandardEngine> engine = std::nullopt, bool clean = false);
 
     struct Data {
-        aho::Mat4x4<float> model;
         aho::Mat4x4<float> view;
         aho::Mat4x4<float> proj;
     };
@@ -35,18 +34,15 @@ public:
     std::vector<vsl::graphic_resource::Resource> resource{};
     size_t generation = 0;
     std::vector<size_t> generations{};
+    std::uint32_t binding;
 
     size_t now_index{};
 
-    MVPMatrix() = default;
+    explicit VPMatrix(Data data, std::uint32_t binding = 0);
 
-    explicit MVPMatrix(Data data);
-
-    MVPMatrix(aho::Mat4x4<float> model, aho::Mat4x4<float> view, aho::Mat4x4<float> proj);
+    VPMatrix(aho::Mat4x4<float> view, aho::Mat4x4<float> proj, std::uint32_t binding = 0);
 
     Data data();
-
-    aho::Mat4x4F model() const;
 
     aho::Mat4x4F view() const;
 
@@ -55,8 +51,6 @@ public:
     void set_index(size_t index);
 
     void set(Data data);
-
-    void set_model(aho::Mat4x4<float> model);
 
     void set_view(aho::Mat4x4<float> view);
 

@@ -9,6 +9,7 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <optional>
 
 namespace utils {
     struct BuildResult {
@@ -16,16 +17,15 @@ namespace utils {
         vsl::GraphicsPipeline pipeline;
     };
 
-    inline BuildResult build_reflected_pipeline(aho::engine::GraphicalEngine *e,
+    inline BuildResult build_reflected_pipeline(vsl::LogicalDeviceAccessor device,
+                                                vsl::RenderPassAccessor render_pass,
                                                 const vsl::PipelineLayout &base_layout,
-                                                std::string vert_path, std::string frag_path) {
+                                                std::string vert_path, std::string frag_path,
+                                                std::function<void(
+                                                        vsl::utils::SPIRVReflector::GenerateData &)> vert_decorator = nullptr,
+                                                std::function<void(
+                                                        vsl::utils::SPIRVReflector::GenerateData &)> frag_decorator = nullptr) {
         namespace pl = vsl::pipeline_layout;
-
-        auto &[vulkan_instance, physical_device, device, command_manager, graphic_resource_manager, synchro_manager]
-                = *e->_data;
-        auto &[surface, swapchain, image_view, render_pass,
-                frame_buffer, image_available, render_finish, in_flight]
-                = *e->getWindow()._data2;
         vert_path = vsl::expand_environments(vert_path);
         frag_path = vsl::expand_environments(frag_path);
         auto layout = base_layout.copy();
@@ -38,8 +38,12 @@ namespace utils {
         auto vert_reflector
                 = vsl::utils::SPIRVReflector(device, std::filesystem::path(vert_path)).generated;
         auto frag_reflector
-                = vsl::utils::SPIRVReflector(device, std::filesystem::path(
-                        vsl::expand_environments(frag_path))).generated;
+                = vsl::utils::SPIRVReflector(device, std::filesystem::path(frag_path)).generated;
+        if (vert_decorator)
+            vert_decorator(vert_reflector);
+        if (frag_decorator)
+            frag_decorator(frag_reflector);
+
         auto layouts = vert_reflector.makeBindingLayout();
         const auto &frag_layout = frag_reflector.makeBindingLayout();
 
@@ -56,4 +60,15 @@ namespace utils {
         return {layout, vsl::GraphicsPipeline(layout, render_pass)};
     }
 
+    inline BuildResult build_reflected_pipeline(aho::engine::GraphicalEngine *e,
+                                                const vsl::PipelineLayout &base_layout,
+                                                std::string vert_path, std::string frag_path,
+                                                std::function<void(
+                                                        vsl::utils::SPIRVReflector::GenerateData &)> vert_decorator = nullptr,
+                                                std::function<void(
+                                                        vsl::utils::SPIRVReflector::GenerateData &)> frag_decorator = nullptr) {
+        auto &device = e->_data->logical_device;
+        auto &render_pass = e->getWindow()._data2->render_pass;
+        return build_reflected_pipeline(device, render_pass, base_layout, vert_path, frag_path, vert_decorator, frag_decorator);
+    }
 }

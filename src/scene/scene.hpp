@@ -8,6 +8,14 @@
 #include <atomic>
 #include "../global.hpp"
 
+enum class SceneID {
+    None,
+    Stop,
+    Lobby,
+    LocalGame,
+    OnlineGame,
+};
+
 class Scene {
     std::atomic<bool> loaded = false;
 public:
@@ -15,7 +23,7 @@ public:
 
     virtual void load(aho::StandardEngine e, GlobalContext& gctx) = 0;
     virtual void unload() = 0;
-    virtual void transfer() = 0;
+    virtual SceneID transfer() = 0;
 };
 
 inline bool Scene::is_loaded() const {

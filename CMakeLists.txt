@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(frontage_client
         src/main.cpp
-        src/scene/game/snapshot.cpp
-        src/scene/game/bridge.cpp
         src/utils/gltf_loader.cpp
         src/utils/bitmap_text.cpp
         src/obj/card.cpp
@@ -20,6 +18,9 @@ add_executable(frontage_client
         src/global.cpp
         src/scene/scene.hpp
         src/resource/standard_buffers.cpp
+        src/utils/operators.cpp
+        src/scene/game/game.hpp
+        src/scene/game/game.cpp
 )
 
 link_directories(lib)
@@ -35,7 +36,7 @@ target_link_libraries(frontage_client PRIVATE ${GLFW_LIBRARIES})
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLFW REQUIRED glfw3)
-target_link_libraries(frontage_client PRIVATE glfw)
+target_link_libraries(frontage_client PRIVATE ${GLFW_LIBRARIES})
 
 find_package(glm CONFIG REQUIRED)
 target_link_libraries(frontage_client PRIVATE glm::glm)

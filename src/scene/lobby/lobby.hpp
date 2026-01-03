@@ -10,15 +10,18 @@
 #include "../../resource/image.hpp"
 
 class LobbyScene : public Scene {
-    aho::StandardEngine engine;
-    GlobalContext *gctx;
-    Image title_back, title_logo, title_frame, start_frame, start_font;
+    struct Data {
+        aho::StandardEngine engine;
+        GlobalContext *gctx;
+        Image title_back, title_logo, title_frame, start_frame, start_font;
+    };
+    std::optional<Data> data;
 public:
     void load(aho::StandardEngine e, GlobalContext& gctx) override;
 
     void unload() override;
 
-    void transfer() override;
+    SceneID transfer() override;
 };
 
 #endif //FRONTAGE_CLIENT_LOBBY_HPP

@@ -14,8 +14,6 @@
 /*
 * https://vulkan-tutorial.com/en/Vertex_buffers/Staging_buffer
 */
-#define STB_IMAGE_IMPLEMENTATION 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include <boost/bimap.hpp>
 // #include "../thirdparty/json.hpp"
 #include "../thirdparty/stb_image.h"
@@ -26,110 +24,144 @@
 #include "resource/image.hpp"
 #include "resource/mvp.hpp"
 #include "drawer/texture.hpp"
+#include "scene/lobby/lobby.hpp"
+#include "scene/game/game.hpp"
 #include "global.hpp"
 
 #define DEBUG
 
 int main() {
+
 #if !defined(DEBUG) && !defined(_DEBUG)
     try {
+#else
+    {
 #endif
-    using namespace vsl;
-    namespace gfx_src = vsl::graphic_resource;
+        using namespace vsl;
+        namespace gfx_src = vsl::graphic_resource;
         using namespace aho;
         using namespace aho::coordinate;
         using namespace aho::literals;
         namespace pl = vsl::pipeline_layout;
 #ifdef _MSC_VER
-    vsl::utils::ShaderCompiler shader_compiler("glslc", {
-            "${AHO_HOME}/built-in-resource/shaders/",
-            "shaders/float/",
-            "shaders/int/",
-            "shaders/ubo/",
-            "shaders/ubo_pos/" });
-#elifdef __APPLE_CC__
-    vsl::utils::ShaderCompiler shader_compiler("glslc", {
-            "${AHO_HOME}/built-in-resource/shaders/",
-            "../shaders/float/",
-            "../shaders/int/",
-            "../shaders/ubo/",
-            "../shaders/ubo_pos/"});
-#endif
-    shader_compiler.load();
-    shader_compiler.compile();
-
-    aho::engine::StandardEngine engine("frontage");
-
-        auto &[vulkan_instance, physical_device, device, command_manager, graphic_resource_manager, synchro_manager]
-                = *engine._data;
-        auto &main_window = engine.boot_window.value();
-        auto &[surface, swapchain, image_view, render_pass,
-                frame_buffer, image_available, render_finish, in_flight]
-                = *engine.boot_window.value()._data2;
-    main_window.resize(960, 540);
-
-    GlobalContext gctx {
-        .viewport{swapchain},
-        .scissor{swapchain},
-    };
-
-    PipelineLayout layout(device,
-                          pl::ColorBlend(),
-                          pl::InputAssembly(),
-                          pl::Multisample(),
-                          pl::Rasterization(),
-                          pl::DepthStencil(),
-                          pl::DynamicState(),
-                          gctx.scissor,
-                          gctx.viewport);
-
-        ::Image::get_context(engine);
-        ::MVPMatrix::get_context(engine);
-    get_texture_drawer_controller(engine, layout);
-#ifdef _MSC_VER
         vsl::utils::ShaderCompiler shader_compiler("glslc", {
+                "${AHO_HOME}/built-in-resource/shaders/",
                 "shaders/float/",
                 "shaders/int/",
                 "shaders/ubo/",
                 "shaders/ubo_pos/" });
 #elifdef __APPLE_CC__
         vsl::utils::ShaderCompiler shader_compiler("glslc", {
+                "${AHO_HOME}/built-in-resource/shaders/",
                 "../shaders/float/",
                 "../shaders/int/",
                 "../shaders/ubo/",
-                "../shaders/ubo_pos/"});
+                "../shaders/ubo_pos/",
+                "../shaders/specialize"});
 #endif
         shader_compiler.load();
         shader_compiler.compile();
 
-    main_window.add_plugin<window::WindowResizeHookPlugin>([&gctx, &swapchain](auto w) {
-        gctx.viewport = Viewport(swapchain);
-        gctx.scissor = Scissor(swapchain);
+        aho::engine::StandardEngine engine("frontage");
+        auto &[vulkan_instance, physical_device, device, command_manager, graphic_resource_manager, synchro_manager]
+                = *engine._data;
+        auto &main_window = engine.boot_window.value();
+        auto &[surface, swapchain, render_pass,
+                frame_buffer, image_available, render_finish, in_flight]
+                = *engine.boot_window.value()._data2;
+        main_window.resize(960, 540);
+
+        GlobalContext gctx{
+                .viewport{swapchain},
+                .scissor{swapchain},
+                .base_layout = {device}
+        };
+
+        gctx.base_layout.add(pl::ColorBlend(),
+                       pl::InputAssembly(),
+                       pl::Multisample(),
+                       pl::Rasterization(),
+                       pl::DepthStencil(),
+                       pl::DynamicState(),
+                       gctx.scissor,
+                       gctx.viewport);
+
+        ::Image::get_context(engine);
+        ::VPMatrix::get_context(engine);
+        get_texture_drawer_controller(engine, gctx.base_layout);
+        bufs::rect_indexes(engine);
+        bufs::normal_texcoord(engine);
+
+        main_window.add_plugin<window::WindowResizeHookPlugin>([&gctx, &swapchain](auto w) {
+            gctx.viewport = Viewport(swapchain);
+            gctx.scissor = Scissor(swapchain);
+        });
+
+        std::shared_ptr<Scene> lobbyScene(new LobbyScene());
+        std::shared_ptr<Scene> gameScene(new GameScene());
+
+        std::shared_ptr<Scene> nowScene = gameScene;
+
+        while (true) {
+            if (not nowScene->is_loaded())
+                nowScene->load(engine, gctx);
+            auto nextScene = nowScene->transfer();
+            switch (nextScene) {
+                case SceneID::Stop:
+                    goto main_loop_out;
+                case SceneID::Lobby:
+                    nowScene = lobbyScene;
+                    break;
+                case SceneID::LocalGame:
+                    nowScene = gameScene;
+                    break;
+                case SceneID::OnlineGame:
+                    break;
+                case SceneID::None:
+                default:
+                    return 1;
+            }
+        }
+        main_loop_out:
+
+        ::Image::get_context(engine, true);
+        ::VPMatrix::get_context(engine, true);
+        get_texture_drawer_controller(engine, gctx.base_layout, true);
+        bufs::rect_indexes(engine, true);
+        bufs::normal_texcoord(engine, true);
+#if !defined(DEBUG) && !defined(_DEBUG)
+    }
+    catch (std::exception &e) {
+        vsl::loggingln(e.what());
+        return 1;
+    }
+    catch (vsl::exceptions::VSLException &e) {
+        vsl::loggingln(e.what());
+        return 1;
+    }
+#else
+    }
+#endif
+}
+    /*
+    VPMatrix mvp({
+                          .model = matrix::make_rotation(0.0_rad,
+                                                         Vector(0.0f, 0.0f, 1.0f)),
+                          .view = matrix::make_view(Point(2.0f, 0.0f, 2.0f),
+                                                    Point(0.0f, 0.0f, 0.0f),
+                                                    Vector(0.0f, 0.0f, 1.0f)),
+                          .proj = matrix::make_perspective(45.0_deg,
+                                                           gctx.viewport.width / (float) gctx.viewport.height,
+                                                           0.1f,
+                                                           10.0f)
+                  });
+    main_window.add_plugin<window::WindowResizeHookPlugin>([&mvp, &swapchain](auto w) {
+        auto size = w->frame_size();
+        mvp.set_proj(matrix::make_perspective(45.0_deg,
+                                              (float) size.value.x.value / size.value.y.value,
+                                              0.1f,
+                                              10.0f));
     });
-
-    
-
-
-        MVPMatrix mvp({
-                              .model = matrix::make_rotation(0.0_rad,
-                                                             Vector(0.0f, 0.0f, 1.0f)),
-                              .view = matrix::make_view(Point(2.0f, 0.0f, 2.0f),
-                                                        Point(0.0f, 0.0f, 0.0f),
-                                                        Vector(0.0f, 0.0f, 1.0f)),
-                              .proj = matrix::make_perspective(45.0_deg,
-                                                               gctx.viewport.width / (float)gctx.viewport.height,
-                                                               0.1f,
-                                                               10.0f)
-                      });
-
-        main_window.add_plugin<window::WindowResizeHookPlugin>([&mvp, &swapchain](auto w) {
-            auto size = w->frame_size();
-            mvp.set_proj(matrix::make_perspective(45.0_deg,
-                (float)size.value.x.value / size.value.y.value,
-                0.1f,
-                10.0f));
-            });
-
         ::Image logo("ahaha_logo", "${AHO_HOME}/built-in-resource/images/ahahacraft.png");
 
         ::utils::Bitmap buffer;
@@ -141,7 +173,6 @@ int main() {
         }
         ::Image title("title", buffer);
 
-    /*
 
         auto [input_vertices_layout, input_vertices] = ::utils::build_reflected_pipeline(
                 &engine, layout,
@@ -192,7 +223,6 @@ int main() {
 
         {
             auto phase = DrawPhase(engine);
-            frame_buffer.setTargetFrame(phase.getImageIndex());
             mvp.set_index(phase.getImageIndex());
             mvp.set_view(mvp.view() * matrix::make_move(move));
 
@@ -335,15 +365,6 @@ int main() {
     /**
 }
 */
-#if !defined(DEBUG) && !defined(_DEBUG)
-    catch (std::exception &e) {
-        vsl::loggingln(e.what());
-        return 1;
-    }
-    catch (vsl::exceptions::VSLException &e) {
-        vsl::loggingln(e.what());
-        return 1;
-    }
-#endif
-/**/
+/**
 }
+*/
