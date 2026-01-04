@@ -9,6 +9,7 @@
 #include "../../drawer/texture.hpp"
 #include "../../utils/operators.hpp"
 #include "../../resource/standard_buffers.hpp"
+#include "../../define.hpp"
 
 #include <tuple>
 #include <span>
@@ -39,8 +40,8 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
     auto [tile_texture_layout, tile_texture] = ::utils::build_reflected_pipeline(
             device, RenderPassAccessor{picking_render_pass._data}/*FIXME 禁じ手*/,
             gctx.base_layout.add(pipeline_layout::IDPicking()),
-            "../shaders/specialize/tile_texture.vert.spv",
-            "../shaders/specialize/tile_texture.frag.spv",
+            PATH_NORMALIZE("shaders/specialize/tile_texture.vert.spv"),
+            PATH_NORMALIZE("shaders/specialize/tile_texture.frag.spv"),
             [](auto &generated) {
                 if (generated.vertex_input->definitions.size() < 3) {
                     loggingln("error: tile_texture vertex input");
@@ -67,7 +68,8 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
             .vert_buffer = {device, command_manager, vertices},
             .instance_buffer = {device, sizeof(TileData) * board_size * board_size},
             .tile_images = {"tiles",
-                            {"../resource/image/maptile_sabaku.png", "../resource/image/maptile_sogen_hana.png"}},
+                            {PATH_NORMALIZE("resource/image/maptile_sabaku.png"),
+                             PATH_NORMALIZE("resource/image/maptile_sogen_hana.png")}},
             .tile_texture_layout = tile_texture_layout,
             .tile_texture = tile_texture,
             .picking_render_pass = picking_render_pass,

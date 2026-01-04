@@ -27,6 +27,7 @@
 #include "scene/lobby/lobby.hpp"
 #include "scene/game/game.hpp"
 #include "global.hpp"
+#include "define.hpp"
 
 #define DEBUG
 
@@ -43,22 +44,13 @@ int main() {
         using namespace aho::coordinate;
         using namespace aho::literals;
         namespace pl = vsl::pipeline_layout;
-#ifdef _MSC_VER
         vsl::utils::ShaderCompiler shader_compiler("glslc", {
                 "${AHO_HOME}/built-in-resource/shaders/",
-                "shaders/float/",
-                "shaders/int/",
-                "shaders/ubo/",
-                "shaders/ubo_pos/" });
-#elifdef __APPLE_CC__
-        vsl::utils::ShaderCompiler shader_compiler("glslc", {
-                "${AHO_HOME}/built-in-resource/shaders/",
-                "../shaders/float/",
-                "../shaders/int/",
-                "../shaders/ubo/",
-                "../shaders/ubo_pos/",
-                "../shaders/specialize"});
-#endif
+                PATH_NORMALIZE("shaders/float/"),
+                PATH_NORMALIZE("shaders/int/"),
+                PATH_NORMALIZE("shaders/ubo/"),
+                PATH_NORMALIZE("shaders/ubo_pos/"),
+                PATH_NORMALIZE("shaders/specialize/") });
         shader_compiler.load();
         shader_compiler.compile();
 

@@ -7,6 +7,7 @@
 #include "lobby.hpp"
 #include "../../drawer/texture.hpp"
 #include "../../utils/operators.hpp"
+#include "../../define.hpp"
 
 #include <tuple>
 
@@ -14,13 +15,13 @@ void LobbyScene::load(aho::StandardEngine e, GlobalContext &gctx) {
     std::string err;
     ::utils::Bitmap buffer;
     if (::utils::RenderTextBitmap(
-            "../resource/font/VT323-Regular.ttf", "frontage", 64.0f * 5, buffer, 4, &err)) { // HannariMincho-Regular.ttf
+            PATH_NORMALIZE("resource/font/VT323-Regular.ttf"), "frontage", 64.0f * 5, buffer, 4, &err)) { // HannariMincho-Regular.ttf
     } else {
         std::print("[bitmap] render failed: {}\n", err);
     }
     auto title_logo = Image("title_logo", buffer);
     if (::utils::RenderTextBitmap(
-            "../resource/font/VT323-Regular.ttf", "START", 64.0f, buffer, 4, &err)) { // HannariMincho-Regular.ttf
+            PATH_NORMALIZE("resource/font/VT323-Regular.ttf"), "START", 64.0f, buffer, 4, &err)) { // HannariMincho-Regular.ttf
     } else {
         std::print("[bitmap] render failed: {}\n", err);
     }
@@ -28,10 +29,10 @@ void LobbyScene::load(aho::StandardEngine e, GlobalContext &gctx) {
     data.emplace(Data{
             .engine = e,
             .gctx = &gctx,
-            .title_back = Image("title_frame", "../resource/image/title_back.png"),
+            .title_back = Image("title_frame", PATH_NORMALIZE("resource/image/title_back.png")),
             .title_logo = title_logo,
-            .title_frame = Image("title_frame", "../resource/image/stone_frame_short.png"),
-            .start_frame = Image("start_frame", "../resource/image/wood_frame_short.png"),
+            .title_frame = Image("title_frame", PATH_NORMALIZE("resource/image/stone_frame_short.png")),
+            .start_frame = Image("start_frame", PATH_NORMALIZE("resource/image/wood_frame_short.png")),
             .start_font = start_font,
     });
 }
