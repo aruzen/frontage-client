@@ -13,7 +13,9 @@ layout(location = 3) flat out int instanceId;
 vec4 ChoseColor(int instanceState) {
     switch (instanceState >> (32 - 4)) {
     case 1: // mouse over
-        return vec4(1.0, 0.0, 0.0, 1.0);
+        return vec4(0.8, 0.8, 0.0, 0.2);
+    case 2: // clicked
+        return vec4(1.0, 0.3, 0.3, 0.2);
     default:
         return vec4(0.0, 0.0, 0.0, 0.0);
     }
@@ -40,7 +42,7 @@ const vec2 TEXCOORD[4] = {
 };
 
 void main() {
-    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 0.0, 1.0);
+    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition + TEXCOORD[gl_VertexIndex % 4] * 0.001, 0.0, 1.0);
     // gl_Position = model * vec4(inPosition, 0.0, 1.0);
     // gl_Position = vec4(inPosition, 0.0, 1.0);
     // gl_Position = vec4(TEXCOORD[gl_VertexIndex % 4], 0.0, 1.0);

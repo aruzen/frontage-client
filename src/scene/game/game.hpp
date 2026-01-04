@@ -14,14 +14,15 @@ class GameScene : public Scene {
 public:
     static constexpr uint32_t board_size = 7;
 
-    enum class tile_id : std::uint32_t {
+    enum class tile_texture : std::uint32_t {
         Sabaku = 0,
         Sougenn = 1
     };
 
     enum class tile_state : std::uint32_t {
         Normal = 0,
-        MouseOver = 1
+        MouseOver = 1,
+        Slected = 2
     };
 
     struct TileData {
