@@ -8,11 +8,17 @@
 #include <AHO/aho.hpp>
 
 namespace bufs {
-    vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
-    normal_texcoord(std::optional<aho::StandardEngine> e = std::nullopt, bool clean = false);
+	std::optional<vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>>
+		init_normal_texcoord(std::optional<aho::StandardEngine> e = std::nullopt, bool clean = false);
 
-    vsl::DeviceLocalBuffer<vsl::MemoryType::IndexBuffer>
-    rect_indexes(std::optional<aho::StandardEngine> e = std::nullopt, bool clean = false);
+	vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer>
+		normal_texcoord();
+
+	std::optional<vsl::DeviceLocalBuffer<vsl::MemoryType::IndexBuffer>>
+		init_rect_indexes(std::optional<aho::StandardEngine> e = std::nullopt, bool clean = false);
+
+	vsl::DeviceLocalBuffer<vsl::MemoryType::IndexBuffer>
+		rect_indexes();
 }
 
 #endif //FRONTAGE_CLIENT_STANDERD_BUFFERS_HPP

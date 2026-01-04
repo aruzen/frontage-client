@@ -78,11 +78,11 @@ int main() {
                        gctx.scissor,
                        gctx.viewport);
 
-        ::Image::get_context(engine);
-        ::VPMatrix::get_context(engine);
-        get_texture_drawer_controller(engine, gctx.base_layout);
-        bufs::rect_indexes(engine);
-        bufs::normal_texcoord(engine);
+        ::Image::init_contxt(engine);
+        ::VPMatrix::init_context(engine);
+        init_texture_drawer_controller(engine, gctx.base_layout);
+        bufs::init_rect_indexes(engine);
+        bufs::init_normal_texcoord(engine);
 
         main_window.add_plugin<window::WindowResizeHookPlugin>([&gctx, &swapchain](auto w) {
             gctx.viewport = Viewport(swapchain);
@@ -116,11 +116,11 @@ int main() {
         }
         main_loop_out:
 
-        ::Image::get_context(engine, true);
-        ::VPMatrix::get_context(engine, true);
-        get_texture_drawer_controller(engine, gctx.base_layout, true);
-        bufs::rect_indexes(engine, true);
-        bufs::normal_texcoord(engine, true);
+        ::Image::init_contxt(engine, true);
+        ::VPMatrix::init_context(engine, true);
+        init_texture_drawer_controller(engine, gctx.base_layout, true);
+        bufs::init_rect_indexes(engine, true);
+        bufs::init_normal_texcoord(engine, true);
 #if !defined(DEBUG) && !defined(_DEBUG)
     }
     catch (std::exception &e) {

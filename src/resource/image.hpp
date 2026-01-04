@@ -21,7 +21,9 @@ struct Image {
 
     static Context make_context(std::optional<aho::StandardEngine> engine);
 
-    static Context &get_context(std::optional<aho::StandardEngine> engine = std::nullopt, bool clean = false);
+    static std::optional<Context>& init_contxt(std::optional<aho::StandardEngine> engine = std::nullopt, bool clean = false);
+
+    static Context& get_context();
 
     std::string name;
     uint32_t channel, width, height;

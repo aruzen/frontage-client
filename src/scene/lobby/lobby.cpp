@@ -9,6 +9,7 @@
 #include "../../utils/operators.hpp"
 #include "../../define.hpp"
 
+#include <print>
 #include <tuple>
 
 void LobbyScene::load(aho::StandardEngine e, GlobalContext &gctx) {

@@ -24,9 +24,12 @@ struct TextureDrawerContext {
     vsl::PipelineLayout int_push_texture_layout;
 };
 
-extern TextureDrawerContext &get_texture_drawer_controller(std::optional<aho::engine::StandardEngine> engine = std::nullopt,
+extern std::optional<TextureDrawerContext> &init_texture_drawer_controller(std::optional<aho::engine::StandardEngine> engine = std::nullopt,
                                                            std::optional<vsl::PipelineLayout> layout = std::nullopt,
                                                            bool clean = false);
+
+
+extern TextureDrawerContext& get_texture_drawer_controller();
 
 void draw(const Image &image, const aho::d2::PointI &pos, const aho::d2::VectorI &size,
           aho::DrawPhase *phase = aho::THREAD_LOCAL_DRAW_PHASE);

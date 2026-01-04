@@ -25,11 +25,15 @@ Image::Context Image::make_context(std::optional<aho::StandardEngine> e) {
     };
 }
 
-Image::Context &Image::get_context(std::optional<aho::StandardEngine> engine, bool clean) {
+std::optional<Image::Context>& Image::init_contxt(std::optional<aho::StandardEngine> engine, bool clean) {
     static std::optional<Image::Context> context = make_context(engine);
     if (clean)
         context.reset();
-    return *context;
+    return context;
+}
+
+Image::Context& Image::get_context() {
+    return init_contxt().value();
 }
 
 Image::Image(const std::string &name, const std::string &file_path) : name(name) {
@@ -56,7 +60,7 @@ void Image::update(const std::string &file_path) {
     loggingln(path);
 
     int texWidth = 0, texHeight = 0, texChannels = 0;
-    stbi_uc *pixels = stbi_load(path.c_str(),
+    stbi_uc *pixels = stbi_load(path.string().c_str(),
                                 &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     update(static_cast<size_t>(texWidth), static_cast<size_t>(texHeight),
            static_cast<size_t>(texChannels), pixels);
@@ -138,7 +142,7 @@ void ImageArray::update(std::initializer_list<std::string> file_names) {
         loggingln(path);
 
         int texWidthTmp = 0, texHeightTmp = 0, texChannelsTmp = 0;
-        stbi_uc *pixels = stbi_load(path.c_str(),
+        stbi_uc *pixels = stbi_load(path.string().c_str(),
                                     &texWidthTmp, &texHeightTmp, &texChannelsTmp, STBI_rgb_alpha);
         if (texWidth == 0) {
             texWidth = texWidthTmp;

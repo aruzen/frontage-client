@@ -19,7 +19,9 @@ struct VPMatrix {
 
     static Context make_context(std::optional<aho::StandardEngine> engine);
 
-    static Context &get_context(std::optional<aho::StandardEngine> engine = std::nullopt, bool clean = false);
+    static std::optional<Context>& init_context(std::optional<aho::StandardEngine> engine = std::nullopt, bool clean = false);
+
+    static Context& get_context();
 
     struct Data {
         aho::Mat4x4<float> view;

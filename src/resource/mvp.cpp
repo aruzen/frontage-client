@@ -25,11 +25,15 @@ VPMatrix::Context VPMatrix::make_context(std::optional<aho::StandardEngine> e) {
     };
 }
 
-VPMatrix::Context &VPMatrix::get_context(std::optional<aho::StandardEngine> engine, bool clean) {
+std::optional<VPMatrix::Context>& VPMatrix::init_context(std::optional<aho::StandardEngine> engine, bool clean) {
     static std::optional<VPMatrix::Context> context = make_context(engine);
     if (clean)
         context.reset();
-    return *context;
+    return context;
+}
+
+VPMatrix::Context& VPMatrix::get_context() {
+    return init_context().value();
 }
 
 VPMatrix::VPMatrix(Data data, std::uint32_t binding) : _data(data), binding(binding) {

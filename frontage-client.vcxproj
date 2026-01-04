@@ -95,8 +95,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>"C:\Users\user\source\repos\aruzen\AHO\x64\Debug\VSLi.lib";"$C:\Users\user\source\repos\aruzen\AHO\x64\Debug\AHOLi.lib";"$(GLFW)\lib-vc2019\glfw3.lib";"$(VULKAN_SDK)\Lib\Vulkan-1.lib";"$(VULKAN_SDK)\Lib\spirv-cross-cppd.lib";"$(VULKAN_SDK)\Lib\spirv-cross-cored.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>"C:\Users\user\source\repos\aruzen\AHO\x64\Debug\VSLi.lib";"C:\Users\user\source\repos\aruzen\AHO\x64\Debug\AHOLi.lib";"$(GLFW)\lib-vc2019\glfw3.lib";"$(VULKAN_SDK)\Lib\Vulkan-1.lib";"$(VULKAN_SDK)\Lib\spirv-cross-cppd.lib";"$(VULKAN_SDK)\Lib\spirv-cross-cored.lib";%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,29 +127,35 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\drawer\texture.cpp" />
+    <ClCompile Include="src\global.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\obj\card.cpp" />
     <ClCompile Include="src\obj\piece.cpp" />
     <ClCompile Include="src\obj\square.cpp" />
     <ClCompile Include="src\resource\image.cpp" />
     <ClCompile Include="src\resource\mvp.cpp" />
-    <ClCompile Include="src\scene\game\bridge.cpp" />
-    <ClCompile Include="src\scene\game\snapshot.cpp" />
-    <ClCompile Include="src\scene\lobby\title.cpp" />
+    <ClCompile Include="src\resource\standard_buffers.cpp" />
+    <ClCompile Include="src\scene\game\game.cpp" />
+    <ClCompile Include="src\scene\lobby\lobby.cpp" />
     <ClCompile Include="src\utils\bitmap_text.cpp" />
+    <ClCompile Include="src\utils\operators.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\define.hpp" />
     <ClInclude Include="src\drawer\texture.hpp" />
+    <ClInclude Include="src\global.hpp" />
     <ClInclude Include="src\obj\card.hpp" />
     <ClInclude Include="src\obj\piece.hpp" />
     <ClInclude Include="src\obj\square.hpp" />
     <ClInclude Include="src\resource\image.hpp" />
     <ClInclude Include="src\resource\mvp.hpp" />
-    <ClInclude Include="src\scene\game\bridge.hpp" />
-    <ClInclude Include="src\scene\game\c_api.hpp" />
+    <ClInclude Include="src\resource\standard_buffers.hpp" />
+    <ClInclude Include="src\scene\game\game.hpp" />
     <ClInclude Include="src\scene\game\snapshot.hpp" />
-    <ClInclude Include="src\scene\lobby\title.hpp" />
+    <ClInclude Include="src\scene\lobby\lobby.hpp" />
+    <ClInclude Include="src\scene\scene.hpp" />
     <ClInclude Include="src\utils\bitmap_text.hpp" />
+    <ClInclude Include="src\utils\operators.hpp" />
     <ClInclude Include="src\utils\pipeline_helper.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

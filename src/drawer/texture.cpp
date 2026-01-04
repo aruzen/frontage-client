@@ -5,6 +5,7 @@
 #include "texture.hpp"
 
 #include "../utils/pipeline_helper.hpp"
+#include "../define.hpp"
 
 #include <VSL/vulkan/shader.hpp>
 
@@ -16,14 +17,14 @@ TextureDrawerContext make_texture_drawer_context(std::optional<aho::engine::Stan
                                                  std::optional<vsl::PipelineLayout> layout) {
     auto [float_push_texture_layout, float_push_texture] = ::utils::build_reflected_pipeline(
             &(*engine), *layout,
-            "../shaders/float/push_texture.vert.spv",
-            "../shaders/float/push_texture.frag.spv"
+            PATH_NORMALIZE("shaders/float/push_texture.vert.spv"),
+            PATH_NORMALIZE("shaders/float/push_texture.frag.spv")
     );
 
     auto [int_push_texture_layout, int_push_texture] = ::utils::build_reflected_pipeline(
             &(*engine), *layout,
-            "../shaders/int/push_texture.vert.spv",
-            "../shaders/int/push_texture.frag.spv"
+            PATH_NORMALIZE("shaders/int/push_texture.vert.spv"),
+            PATH_NORMALIZE("shaders/int/push_texture.frag.spv")
     );
 
     return TextureDrawerContext{
@@ -35,13 +36,17 @@ TextureDrawerContext make_texture_drawer_context(std::optional<aho::engine::Stan
     };
 }
 
-TextureDrawerContext &get_texture_drawer_controller(std::optional<aho::engine::StandardEngine> engine,
-                                                    std::optional<vsl::PipelineLayout> layout,
-                                                    bool clean) {
+std::optional<TextureDrawerContext>& init_texture_drawer_controller(std::optional<aho::engine::StandardEngine> engine,
+                                                                    std::optional<vsl::PipelineLayout> layout,
+                                                                    bool clean) {
     static std::optional<TextureDrawerContext> controller = make_texture_drawer_context(engine.value(), layout.value());
     if (clean)
         controller.reset();
-    return *controller;
+    return controller;
+}
+
+TextureDrawerContext &get_texture_drawer_controller() {
+    return init_texture_drawer_controller().value();
 }
 
 void draw(const Image &image, const aho::d2::PointI &pos, const aho::d2::VectorI &size,
