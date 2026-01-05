@@ -44,14 +44,12 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
         }
         loggingln(generated.vertex_input->definitions.size());
         std::vector<pipeline_layout::VertexInputShapeDefinition>& defs = generated.vertex_input->definitions;
-        for (auto& d : defs) {
-            loggingln(d.binding);
-            loggingln(d.layouts.size());
-        }
-        defs[0].updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
+        generated.vertex_input->definitions = std::vector<pipeline_layout::VertexInputShapeDefinition>{
+            defs[2], defs[0], defs[1]
+        };
+        defs = generated.vertex_input->definitions;
         defs[1].updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
-        std::ranges::reverse(defs);
-        std::swap(defs[0], defs[1]);
+        defs[2].updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
     };
 
     auto [tile_texture_layout, tile_texture] = ::utils::build_reflected_pipeline(
@@ -74,8 +72,8 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
             .vpmat = VPMatrix(VPMatrix::Data{}),
             .vert_buffer = {device, command_manager, vertices},
             .state_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
-            .tile_model_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
-            .piece_model_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
+            .tile_model_buffer = {device, sizeof(Mat4x4F) * board_size * board_size},
+            .piece_model_buffer = {device, sizeof(Mat4x4F) * board_size * board_size},
             .tile_images = {"tiles",
                             {PATH_NORMALIZE("resource/image/tile/maptile_sabaku.png"),
                              PATH_NORMALIZE("resource/image/tile/maptile_sogen_hana.png")}},
@@ -286,7 +284,7 @@ SceneID GameScene::transfer() {
         }
 
         if (update_instance) {
-            data->state_buffer.copy(tiles.data(), tiles.size());
+            data->state_buffer.copy(states.data(), states.size());
         }
 
         // =============================================================
