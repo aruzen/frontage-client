@@ -35,30 +35,37 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
         std::cout << v.value << std::endl;
 
     IDPickingRenderPass picking_render_pass{swapchain};
-    auto a = (RenderPassAccessor) picking_render_pass;
+    auto pick_base =  gctx.base_layout.copy().add(pipeline_layout::IDPicking());
+
+    auto convert_per_instance = [](auto &generated) {
+        if (generated.vertex_input->definitions.size() < 3) {
+            loggingln("error: tile_texture vertex input");
+            return;
+        }
+        loggingln(generated.vertex_input->definitions.size());
+        std::vector<pipeline_layout::VertexInputShapeDefinition>& defs = generated.vertex_input->definitions;
+        for (auto& d : defs) {
+            loggingln(d.binding);
+            loggingln(d.layouts.size());
+        }
+        defs[0].updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
+        defs[1].updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
+        std::ranges::reverse(defs);
+        std::swap(defs[0], defs[1]);
+    };
 
     auto [tile_texture_layout, tile_texture] = ::utils::build_reflected_pipeline(
-            device, RenderPassAccessor{picking_render_pass._data}/*FIXME 禁じ手*/,
-            gctx.base_layout.add(pipeline_layout::IDPicking()),
+            device, RenderPassAccessor{picking_render_pass._data}/*FIXME 禁じ手*/, pick_base,
             PATH_NORMALIZE("shaders/specialize/tile_texture.vert.spv"),
             PATH_NORMALIZE("shaders/specialize/tile_texture.frag.spv"),
-            [](auto &generated) {
-                if (generated.vertex_input->definitions.size() < 3) {
-                    loggingln("error: tile_texture vertex input");
-                    return;
-                }
-                auto &instance_input = generated.vertex_input->definitions[0];
-                for (auto &a: std::span(generated.vertex_input->definitions).subspan(2,
-                                                                                     generated.vertex_input->definitions.size() -
-                                                                                     2)) {
-                    loggingln("before : ", instance_input.layouts.size());
-                    instance_input.layouts.insert(instance_input.layouts.begin(), a.layouts.begin(), a.layouts.end());
-                    loggingln("after  : ", instance_input.layouts.size());
-                }
-                instance_input.updateTiming = pipeline_layout::VertexInputShapeDefinition::UpdateTiming::NextInstance;
-                generated.vertex_input->definitions.resize(2);
-                std::ranges::reverse(generated.vertex_input->definitions);
-            }
+            convert_per_instance
+    );
+
+    auto [piece_texture_layout, piece_texture] = ::utils::build_reflected_pipeline(
+            device, RenderPassAccessor{picking_render_pass._data}/*FIXME 禁じ手*/, pick_base,
+            PATH_NORMALIZE("shaders/specialize/piece_texture.vert.spv"),
+            PATH_NORMALIZE("shaders/specialize/piece_texture.frag.spv"),
+            convert_per_instance
     );
 
     data.emplace(Data{
@@ -66,12 +73,24 @@ void GameScene::load(aho::StandardEngine e, GlobalContext &gctx) {
             .gctx = &gctx,
             .vpmat = VPMatrix(VPMatrix::Data{}),
             .vert_buffer = {device, command_manager, vertices},
-            .instance_buffer = {device, sizeof(TileData) * board_size * board_size},
+            .state_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
+            .tile_model_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
+            .piece_model_buffer = {device, sizeof(std::uint32_t) * board_size * board_size},
             .tile_images = {"tiles",
-                            {PATH_NORMALIZE("resource/image/maptile_sabaku.png"),
-                             PATH_NORMALIZE("resource/image/maptile_sogen_hana.png")}},
+                            {PATH_NORMALIZE("resource/image/tile/maptile_sabaku.png"),
+                             PATH_NORMALIZE("resource/image/tile/maptile_sogen_hana.png")}},
             .tile_texture_layout = tile_texture_layout,
             .tile_texture = tile_texture,
+            .piece_images = {"pieces",
+                             {PATH_NORMALIZE("resource/image/piece/少年グルーシャ.png"),
+                              PATH_NORMALIZE("resource/image/piece/旗将炎猿・ドモルドス.png"),
+                              PATH_NORMALIZE("resource/image/piece/爛漫に咲く花・姫百子.png"),
+                              PATH_NORMALIZE("resource/image/piece/生まれたばかりの灯・ベビードレイク.png")}},
+            .piece_texture_layout = piece_texture_layout,
+            .piece_texture = piece_texture,
+            .structure_images = {"structures",
+                                 {PATH_NORMALIZE("resource/image/tile/maptile_sabaku.png"),
+                                  PATH_NORMALIZE("resource/image/tile/maptile_sogen_hana.png")}},
             .picking_render_pass = picking_render_pass,
             .picking_frame_buffer = {swapchain, picking_render_pass}
     });
@@ -129,22 +148,31 @@ SceneID GameScene::transfer() {
                                              data->gctx->viewport.width / (float) data->gctx->viewport.height,
                                              0.1f, 10.0f),
     });
-    std::vector tiles(board_size * board_size, TileData{});
+    std::vector states(board_size * board_size, std::uint32_t{});
+    std::vector tiles(board_size * board_size, Mat4x4F{});
+    std::vector pieces(board_size * board_size, Mat4x4F{});
     for (size_t i = 0; i < board_size; i++) {
         for (size_t j = 0; j < board_size; j++) {
-            tiles[i * board_size + j].state = makeState(tile_state::Normal,
+            states[i * board_size + j] = makeState(tile_state::Normal,
                                                         i < board_size / 2 ? tile_texture::Sabaku :
                                                         board_size / 2 < i ? tile_texture::Sougenn :
                                                         j % 2 == 0 ? tile_texture::Sabaku : tile_texture::Sougenn,
                                                         board_size * i + j + 1);
 
-            tiles[i * board_size + j].model = matrix::make_move(d3::VectorF(
+            tiles[i * board_size + j] = matrix::make_move(d3::VectorF(
+                    (j - ((float) board_size - 1) / 2) * 2.0f / (board_size + 1),
+                    (i - ((float) board_size - 1) / 2) * 2.0f / (board_size + 1),
+                    0));
+
+            pieces[i * board_size + j] = matrix::make_move(d3::VectorF(
                     (j - ((float) board_size - 1) / 2) * 2.0f / (board_size + 1),
                     (i - ((float) board_size - 1) / 2) * 2.0f / (board_size + 1),
                     0));
         }
     }
-    data->instance_buffer.copy(tiles.data(), tiles.size());
+    data->state_buffer.copy(states.data(), states.size());
+    data->tile_model_buffer.copy(tiles.data(), tiles.size());
+    data->piece_model_buffer.copy(pieces.data(), pieces.size());
 
     main_window.add_plugin<window::WindowResizeHookPlugin>([&](aho::window::Window *w) {
         size = w->frame_size();
@@ -175,7 +203,7 @@ SceneID GameScene::transfer() {
             input::KeyCode::I,
             input::KeyCode::Enter)->keys;
 
-    d3::PointF position, before_position;
+    d3::PointF position(0.0, -0.3, -0.9), before_position(0.0, 0.0, 0.0);
     size_t frame = 0;
     size_t clicked = 0, overed = 0;
     while (aho::Window::Update() && main_window && input_manager) {
@@ -201,22 +229,20 @@ SceneID GameScene::transfer() {
         if (id && 0 < *id && *id <= board_size*board_size) {
             if (mouse->leftClick()->up() && clicked != *id) {
                 if (clicked != 0)
-                    tiles[clicked - 1].state &= ~(0xF << 28);
+                    states[clicked - 1] &= ~(0xF << 28);
                 if (*id != 0)
-                    tiles[*id - 1].state = (tiles[*id - 1].state & ~(0xF << 28)) | (std::uint32_t)tile_state::Slected << 28;
+                    states[*id - 1] = (states[*id - 1] & ~(0xF << 28)) | (std::uint32_t)tile_state::Slected << 28;
                 clicked = *id;
                 update_instance = true;
             } else if (overed != *id) {
-                if (overed != 0 && extractTileState(tiles[overed - 1].state) == tile_state::MouseOver)
-                    tiles[overed - 1].state &= ~(0xF << 28);
-                if (*id != 0 && extractTileState(tiles[*id - 1].state) == tile_state::Normal)
-                    tiles[*id - 1].state = (tiles[*id - 1].state & ~(0xF << 28)) | (std::uint32_t)tile_state::MouseOver << 28;
+                if (overed != 0 && extractTileState(states[overed - 1]) == tile_state::MouseOver)
+                    states[overed - 1] &= ~(0xF << 28);
+                if (*id != 0 && extractTileState(states[*id - 1]) == tile_state::Normal)
+                    states[*id - 1] = (states[*id - 1] & ~(0xF << 28)) | (std::uint32_t)tile_state::MouseOver << 28;
                 overed = *id;
                 update_instance = true;
             }
         }
-
-        std::cout << mouse->wheel()->state().value.y << std::endl;
 
         if (mouse->leftClick()->pressed())
             position.value = position.value + (_Vector(mouse->cursor()->delta().value) * frame_buffer_per_ndc * 2.2).cast<float>().value;
@@ -232,10 +258,8 @@ SceneID GameScene::transfer() {
             position.value -= 0.5_f_z * Z(delta);
         if (move_down->pressed())
             position.value += 0.5_f_z * Z(delta);
-        if (0.0 < mouse->wheel()->state().value.y.value)
-            position.value -= 0.1_f_z;
-        if (mouse->wheel()->state().value.y.value < 0.0)
-            position.value += 0.1_f_z;
+        if (0.1 < std::abs(mouse->wheel()->state().value.y.value))
+            position.value -= Z(mouse->wheel()->state().value.y.value * 0.1);
         if (not equales(before_position, position)) {
             // この X, Y, Zオブジェクトは設計見直す必要がありそう
             auto z = abs(position.value.z.value);
@@ -262,7 +286,7 @@ SceneID GameScene::transfer() {
         }
 
         if (update_instance) {
-            data->instance_buffer.copy(tiles.data(), tiles.size());
+            data->state_buffer.copy(tiles.data(), tiles.size());
         }
 
         // =============================================================
@@ -278,7 +302,7 @@ SceneID GameScene::transfer() {
                                                        graphic_resource::BindingDestination::Graphics,
                                                        data->tile_texture,
                                                        1)
-                  << command::BindVertexBuffer(data->vert_buffer, data->instance_buffer)
+                  << command::BindVertexBuffer(data->vert_buffer, data->state_buffer, data->tile_model_buffer)
                   << command::BindIndexBuffer(bufs::rect_indexes())
                   << command::DrawInstance(6, tiles.size());
         }

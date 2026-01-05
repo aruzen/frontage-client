@@ -24,11 +24,6 @@ public:
         MouseOver = 1,
         Slected = 2
     };
-
-    struct TileData {
-        std::uint32_t state;
-        aho::Mat4x4F model;
-    };
 private:
     struct Data {
         aho::StandardEngine engine;
@@ -37,11 +32,20 @@ private:
 
         vsl::DeviceLocalBuffer<vsl::MemoryType::VertexBuffer> vert_buffer;
         vsl::Buffer<vsl::MemoryType::VertexBuffer,
-                vsl::MemoryProperty::HostCoherent | vsl::MemoryProperty::HostVisible> instance_buffer;
+                vsl::MemoryProperty::HostCoherent | vsl::MemoryProperty::HostVisible> state_buffer;
+        vsl::Buffer<vsl::MemoryType::VertexBuffer,
+                vsl::MemoryProperty::HostCoherent | vsl::MemoryProperty::HostVisible> tile_model_buffer;
+        vsl::Buffer<vsl::MemoryType::VertexBuffer,
+                vsl::MemoryProperty::HostCoherent | vsl::MemoryProperty::HostVisible> piece_model_buffer;
 
         ImageArray tile_images;
         vsl::PipelineLayout tile_texture_layout;
         vsl::GraphicsPipeline tile_texture;
+        ImageArray piece_images;
+        vsl::PipelineLayout piece_texture_layout;
+        vsl::GraphicsPipeline piece_texture;
+
+        ImageArray structure_images;
 
         vsl::IDPickingRenderPass picking_render_pass;
         vsl::FrameBuffer picking_frame_buffer;
